@@ -58,3 +58,10 @@ You can retrieve the data points posted by a specific sensor using its ID.
 You can also filter the data points by time range.
 
     curl "http://localhost:8000/sens/api/sensor-data/<SENSOR_ID>/time-range/?start_date=2023-10-01T00:00:00Z&end_date=2025-10-10T23:59:59Z"
+
+
+### Get data points for all sensors
+
+You cna retrieve data points posted by all connected servers during a specific time range.
+
+    curl "http://localhost:8000/sens/api/sensor-data/time-range/?start_date=2023-10-01T00:00:00Z&end_date=2025-10-10T23:59:59Z"
