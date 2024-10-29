@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data for {{ sensor_id }}</title>
+</head>
+<body>
+    <h1>Data for Sensor: {{ sensor_id }}</h1>
+
+    <form method="get">
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date|date:"Y-m-d" }}">
+        
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date|date:"Y-m-d" }}">
+        
+        <button type="submit">Filter</button>
+    </form>
+
+    <h2>Sensor Data:</h2>
+    <table border="1">
+        <tr>
+            <th>Timestamp</th>
+            <th>Location</th>
+            <th>Data</th>
+        </tr>
+        {% for data in sensor_data %}
+        <tr>
+            <td>{{ data.timestamp }}</td>
+            <td>{{ data.location }}</td>
+            <td>{{ data.data }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No data available for this sensor in the given date range.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
