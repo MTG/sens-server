@@ -38,7 +38,7 @@ Server-side infrastructure for SENS acoustic sensors
 
 You can post data making a POST request like this:
 
-    curl -X POST http://127.0.0.1:8000/sens/api/sensor-data/ -H "Content-Type: application/json" -d '{"sensor_id": "sensor_124", "location": "Building A", "data": {"pleasantness": 0.62, "eventfulness": 0.8, "sources":{"dog":0.7}}}'
+    curl -X POST http://127.0.0.1:8000/sens/api/sensor-data/ -H "Content-Type: application/json" -d '{"uuid": "18963ff9-77a2-4f75-b427-0d92bca78da5", "sensor_id": "sensor_124", "location": "Building A", "data": {"pleasantness": 0.62, "eventfulness": 0.8, "sources":{"dog":0.7}}}'
 
 The contents of the `sensor_id`, `location` are strings. `data` field can contain arbitrary JSON formatted data.
 
