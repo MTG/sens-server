@@ -65,3 +65,23 @@ You can also filter the data points by time range.
 You cna retrieve data points posted by all connected servers during a specific time range.
 
     curl "http://localhost:8000/sens/api/sensor-data/time-range/?start_date=2023-10-01T00:00:00Z&end_date=2025-10-10T23:59:59Z"
+
+
+## Pythyon client
+
+A very simple Python client is included which can be used to interact with the server. Here are usage examples using the client:
+
+    import client
+    import datetime
+    
+    # Method to post data to the server (sensors use this method to send data to the remote server)
+    client.post_sensor_data({"pleasantness": 0.85, "eventfulness": 0.3, "sources": {"bird": 0.5, "car": 0.2}})
+    
+    # Methods to retrieve sensor data from the server
+    client.get_sensor_ids()
+    client.get_sensors_data(start_date=datetime.datetime(2023,1,1), end_date=datetime.datetime(2025,3,5,22,13))
+    client.get_data_for_sensor_id(sensor_id='sensor1')
+    client.get_data_for_sensor_id(sensor_id='sensor1', start_date=datetime.datetime(2023,1,1), end_date=datetime.datetime(2025,3,5,22,13))
+
+
+Data points posted using the `post_sensor_data` method will include sensor ID and sensor location information which will be loaded from existing files `sensor_id.txt` and `location.txt` which should be placed at the directory from which the Python code is run from. If these files do not exist, sensor ID and location will be set to `"unknown"`. `sensor_id.txt` and `location.txt` can include an arbitrary string.
