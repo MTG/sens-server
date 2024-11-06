@@ -51,7 +51,7 @@ def get_sensor_data_by_time_range(request):
                         status=status.HTTP_400_BAD_REQUEST)
 
     # Filter the data based on the time range
-    sensor_data = SensorData.objects.filter(Q(timestamp__gte=start_datetime) & Q(timestamp__lte=end_datetime))
+    sensor_data = SensorData.objects.filter(Q(sensor_timestamp__gte=start_datetime) & Q(sensor_timestamp__lte=end_datetime))
 
     # Serialize and return the filtered data
     serializer = SensorDataSerializer(sensor_data, many=True)
@@ -83,8 +83,8 @@ def get_sensor_data_by_sensor_and_time_range(request, sensor_id):
     # Filter the data based on sensor_id and time range
     sensor_data = SensorData.objects.filter(
         sensor_id=sensor_id,
-        timestamp__gte=start_datetime,
-        timestamp__lte=end_datetime
+        sensor_timestamp__gte=start_datetime,
+        sensor_timestamp__lte=end_datetime
     )
 
     # Serialize and return the filtered data
