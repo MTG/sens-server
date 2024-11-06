@@ -21,3 +21,6 @@ local_settings.py
 
 # Windows
 Thumbs.db
+
+sensor_id.txt
+location.txt

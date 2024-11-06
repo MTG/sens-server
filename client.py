@@ -55,7 +55,10 @@ def post_sensor_data(data, sensor_timestamp=None, save_to_disk=True):
     if save_to_disk:
         save_posted_data_to_disk(data)
     # Send to server
-    response = requests.post(url, headers=headers, json=data, timeout=10)
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+    except requests.exceptions.ConnectionError:
+        return False
     return response.ok
 
 
