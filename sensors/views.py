@@ -108,20 +108,20 @@ def sensor_data_view(request, sensor_id):
 
     # Parse the start and end dates if provided
     if start_date:
-        start_date = parse_date(start_date)
+        start_date = parse_datetime(start_date)
     if end_date:
-        end_date = parse_date(end_date)
+        end_date = parse_datetime(end_date)
 
     # Build the filter query
     filter_query = Q(sensor_id=sensor_id)
     
     if start_date:
-        filter_query &= Q(timestamp__gte=start_date)
+        filter_query &= Q(sensor_timestamp__gte=start_date)
     if end_date:
-        filter_query &= Q(timestamp__lte=end_date)
+        filter_query &= Q(sensor_timestamp__lte=end_date)
 
     # Retrieve the filtered sensor data
-    sensor_data = SensorData.objects.filter(filter_query).order_by('timestamp')
+    sensor_data = SensorData.objects.filter(filter_query).order_by('sensor_timestamp')
 
     # Render the data using a template
     return render(request, 'sensors/sensor_data.html', {

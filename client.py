@@ -35,15 +35,19 @@ def save_posted_data_to_disk(data):
         json.dump(data, f)
 
 
-def post_sensor_data(data, save_to_disk=True):
+def post_sensor_data(data, sensor_timestamp=None, save_to_disk=True):
     # Example usage:
     # post_sensor_data({"pleasantness": 0.85, "eventfulness": 0.3, "sources": {"bird": 0.5, "car": 0.2}})
+    # post_sensor_data({"pleasantness": 0.85, "eventfulness": 0.3, "sources": {"bird": 0.5, "car": 0.2}}, sensor_timestamp=datetime.datetime(2024, 1, 1, 12, 23))
     url = API_BASE_URL + "/sensor-data/"
     headers = {
         "Content-Type": "application/json"
     }
+    if sensor_timestamp is None:
+        sensor_timestamp = datetime.datetime.now().replace(microsecond=0)
     data = {
         "uuid": str(uuid.uuid4()),  # Generate unique uuid for data point
+        "sensor_timestamp": sensor_timestamp.isoformat(),
         "sensor_id": SENSOR_ID,
         "location": LOCATION,
         "data": data
