@@ -11,3 +11,6 @@ class SensorData(models.Model):
 
     def __str__(self):
         return f"Sensor {self.sensor_id} at {self.timestamp}"
+    
+    class Meta:
+        ordering = ['-sensor_timestamp']

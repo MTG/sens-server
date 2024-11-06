@@ -121,7 +121,7 @@ def sensor_data_view(request, sensor_id):
         filter_query &= Q(sensor_timestamp__lte=end_date)
 
     # Retrieve the filtered sensor data
-    sensor_data = SensorData.objects.filter(filter_query).order_by('sensor_timestamp')
+    sensor_data = SensorData.objects.filter(filter_query)
 
     # Render the data using a template
     return render(request, 'sensors/sensor_data.html', {
