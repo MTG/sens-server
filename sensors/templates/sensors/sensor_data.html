@@ -18,6 +18,18 @@
 <body>
     <h1>Data for Sensor: {{ sensor_id }}</h1>
 
+    <h2>Real-time data:</h2>
+    <div id="chart-container">
+        <label for="timeRange">Select Time Range:</label>
+        <select id="timeRange" onchange="fetchSensorData();">
+            <option value="1">Last Minute</option>
+            <option value="60" selected>Last Hour</option>
+            <option value="720">Last 12 Hours</option>
+            <option value="1440">Last 24 Hours</option>
+        </select>
+        <canvas id="sensorChart"></canvas>
+    </div>
+
     <h2>Sensor Data:</h2>
 
     <form method="get">
@@ -48,18 +60,6 @@
         </tr>
         {% endfor %}
     </table>
-
-    <h2>Real-time data:</h2>
-    <div id="chart-container">
-        <label for="timeRange">Select Time Range:</label>
-        <select id="timeRange" onchange="fetchSensorData();">
-            <option value="1">Last Minute</option>
-            <option value="60" selected>Last Hour</option>
-            <option value="720">Last 12 Hours</option>
-            <option value="1440">Last 24 Hours</option>
-        </select>
-        <canvas id="sensorChart"></canvas>
-    </div>
 
     <script type="text/javascript">
         const sensorId = "{{ sensor_id }}"; // Replace with the specific sensor ID or make it dynamic 
@@ -127,7 +127,9 @@
             // Dynamically create datasets with sources from the first data point
             const datasets = [
                 { label: 'Pleasantness', data: [], borderColor: 'blue', fill: false },
+                { label: 'Pleasantness Inst', data: [], borderColor: 'blue', fill: false },
                 { label: 'Eventfulness', data: [], borderColor: 'green', fill: false },
+                { label: 'Eventfulness Inst', data: [], borderColor: 'green', fill: false },
             ];
 
             const exampleDataPoint = data[0];
@@ -149,7 +151,7 @@
                     borderColor: sourcesChartColors[index % sourcesChartColors.length],
                     fill: false,
                 });
-                datasetSourcesMap[source] = index + 2;
+                datasetSourcesMap[source] = index + 4;
             });
             sensorChart.data.datasets = datasets;
 
@@ -157,8 +159,10 @@
             data.forEach(item => {
                 const timestamp = new Date(item.sensor_timestamp);
                 const timestampWithTimezone = new Date(timestamp.getTime() + (timestamp.getTimezoneOffset() * 60 * 1000))
-                sensorChart.data.datasets[0].data.push({ x: timestampWithTimezone, y: item.data.pleasantness });
-                sensorChart.data.datasets[1].data.push({ x: timestampWithTimezone, y: item.data.eventfulness });
+                sensorChart.data.datasets[0].data.push({ x: timestampWithTimezone, y: item.data.pleasantness_intg });
+                sensorChart.data.datasets[1].data.push({ x: timestampWithTimezone, y: item.data.pleasantness_inst });
+                sensorChart.data.datasets[2].data.push({ x: timestampWithTimezone, y: item.data.eventfulness_intg });
+                sensorChart.data.datasets[3].data.push({ x: timestampWithTimezone, y: item.data.eventfulness_inst });
                 Object.keys(datasetSourcesMap).forEach((source, index) => {
                     sensorChart.data.datasets[index].data.push({ x: timestampWithTimezone, y: item.data.sources[source] });
                 });
