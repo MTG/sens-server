@@ -9,3 +9,5 @@ services:
       - .:/app
     ports:
       - "8800:8800"
+    environment:
+      - API_BASE_URL=https://labs.freesound.org/sens/api

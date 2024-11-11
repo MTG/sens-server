@@ -1,3 +1,5 @@
+import os 
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -128,7 +130,8 @@ def sensor_data_view(request, sensor_id):
         'sensor_data': sensor_data,
         'sensor_id': sensor_id,
         'start_date': start_date,
-        'end_date': end_date
+        'end_date': end_date,
+        'api_endpoint_url': os.getenv('API_BASE_URL') +  f'/sensor-data/'
     })
 
 
