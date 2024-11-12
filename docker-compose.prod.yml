@@ -5,7 +5,7 @@ services:
   web:
     build: .
     init: true
-    command: uwsgi --chdir=/app --module=sens_server.wsgi:application --env DJANGO_SETTINGS_MODULE=sens_server.settings --http :8800 --socket sens-server.sock
+    command: uwsgi --chdir=/app --module=sens_server.wsgi:application --env DJANGO_SETTINGS_MODULE=sens_server.settings --http :8800
     restart: always
     stop_signal: SIGINT
     volumes:
