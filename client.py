@@ -3,6 +3,8 @@ import json
 import uuid
 import os
 import datetime
+import time
+import zoneinfo
 
 API_BASE_URL = os.getenv('API_BASE_URL',  'https://labs.freesound.org/sens/api')
 LOCAL_COPY_DATA_PATH = 'posted'
@@ -44,7 +46,8 @@ def post_sensor_data(data, sensor_timestamp=None, save_to_disk=True):
         "Content-Type": "application/json"
     }
     if sensor_timestamp is None:
-        sensor_timestamp = datetime.datetime.now().replace(microsecond=0)
+        tzinfo = zoneinfo.ZoneInfo(time.tzname[0])
+        sensor_timestamp = datetime.datetime.now(tzinfo).replace(microsecond=0)
     data = {
         "uuid": str(uuid.uuid4()),  # Generate unique uuid for data point
         "sensor_timestamp": sensor_timestamp.isoformat(),
