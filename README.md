@@ -36,7 +36,7 @@ Server-side infrastructure for SENS acoustic sensors
 
 1. Run following deploy command:
 
-    docker-compose run --rm web fab deploy
+    docker compose run --rm web fab deploy
 
 
 Note this needs to done from a server that has access to `fs-labs.s.upf.edu`.

@@ -16,3 +16,6 @@ COPY . .
 # Set environment variables for Django
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+
+# Add ssh files with correct permissions (needed for deploying)
+RUN mkdir /ssh && cp /app/deploy/ssh/* /ssh && chmod -R 600 /ssh
