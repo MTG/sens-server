@@ -14,7 +14,7 @@ posted
 staticfiles/
 
 # Local development settings
-local_settings.py
+sens_server/local_settings.py
 
 # macOS
 .DS_Store
