@@ -113,11 +113,21 @@
             }
         });
 
-        // The sources chart will contain timeseries for the automatically detected sound sources, which can be arbitrary
+        // The sources chart will contain timeseries for the automatically detected sound sources 
+        // Possible sound sources include: ['birds', 'construction', 'dogs', 'human', 'music', 'nature', 'siren', 'vehicles']
         const sourcesChart = new Chart(sourcesChartCanvas.getContext('2d'), {
             type: 'line',
             data: {
-                datasets: []
+                datasets: [
+                    { label: 'Birds', data: [], borderColor: 'red', fill: false },
+                    { label: 'Construction', data: [], borderColor: 'orange', fill: false },
+                    { label: 'Dogs', data: [], borderColor: 'purple', fill: false },
+                    { label: 'Human', data: [], borderColor: 'brown', fill: false },
+                    { label: 'Music', data: [], borderColor: 'pink', fill: false },
+                    { label: 'Nature', data: [], borderColor: 'gray', fill: false },
+                    { label: 'Siren', data: [], borderColor: 'black', fill: false },
+                    { label: 'Vehicles', data: [], borderColor: 'cyan', fill: false },
+                ]
             },
             options: {
                 scales: {
@@ -161,7 +171,6 @@
             // Add "start_date" and "end_date" parameters to the apiUrl following this format: .../?start_date=2023-10-01T00:00:00Z&end_date=2025-10-10T23:59:59Z
             // API endpoint to get sensor data filtered by sensor ID and time range
             const apiUrl = "{{ api_endpoint_url }}" + sensorId + '/time-range/?start_date=' + startTime.toISOString() + '&end_date=' + currentTime.toISOString();
-            console.log(apiUrl)
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
@@ -190,55 +199,29 @@
 
             isoChart.update();
 
-            /*
-            // Update sources chart data
-            // Here we will dynamically create datasets for each source detected, and we might need to remove some as well
-            const listOfSources = []
-            for (let i = 0; i < data.length; i++) {
-                const sources = data[i].data.sources;
-                Object.keys(sources).forEach(source => {
-                    if (!listOfSources.includes(source)) {
-                        listOfSources.push(source);
-                    }
-                });
-            }
-            
+            // Update sourcesChart data
+            sourcesChart.data.datasets[0].data = [];
+            sourcesChart.data.datasets[1].data = [];
+            sourcesChart.data.datasets[2].data = [];
+            sourcesChart.data.datasets[3].data = [];
+            sourcesChart.data.datasets[4].data = [];
+            sourcesChart.data.datasets[5].data = [];
+            sourcesChart.data.datasets[6].data = [];
+            sourcesChart.data.datasets[7].data = [];
 
-      
-
-            const exampleDataPoint = data[0];
-
-            if (exampleDataPoint === undefined) {
-                sensorChart.data.datasets = []
-                sensorChart.update();
-                return;
-            }
-
-            const datasetSourcesMap = {}
-            const sourcesChartColors = ['red', 'orange', 'purple', 'brown', 'pink', 'gray', 'black', 'cyan', 'magenta', 'yellow', 'lime', 'teal', 'indigo', 'violet', 
-            'fuchsia', 'gold', 'darkorange', 'darkred', 'darkgreen', 'darkblue', 'darkviolet', 'darkcyan', 'darkmagenta', 'darkyellow', 'darklime', 'darkteal', 
-            'darkindigo', 'darkfuchsia', 'darkgold', 'darkgray', 'darkblack', 'darkpink', 'darkbrown', 'darkpurple', 'darkorange', 'darkred']
-            Object.keys(exampleDataPoint.data.sources).forEach((source, index) => {
-                datasets.push({
-                    label: 'Source ' + source,
-                    data: [],
-                    borderColor: sourcesChartColors[index % sourcesChartColors.length],
-                    fill: false,
-                });
-                datasetSourcesMap[source] = index + 4;
-            });
-            sensorChart.data.datasets = datasets;
-
-            // Add data to the datasets
             data.forEach(item => {
                 const timestamp = new Date(item.sensor_timestamp);
-                Object.keys(datasetSourcesMap).forEach((source, index) => {
-                    sensorChart.data.datasets[index].data.push({ x: timestamp, y: item.data.sources[source] });
-                });
+                sourcesChart.data.datasets[0].data.push({ x: timestamp, y: item.data.sources.birds });
+                sourcesChart.data.datasets[1].data.push({ x: timestamp, y: item.data.sources.construction });
+                sourcesChart.data.datasets[2].data.push({ x: timestamp, y: item.data.sources.dogs });
+                sourcesChart.data.datasets[3].data.push({ x: timestamp, y: item.data.sources.human });
+                sourcesChart.data.datasets[4].data.push({ x: timestamp, y: item.data.sources.music });
+                sourcesChart.data.datasets[5].data.push({ x: timestamp, y: item.data.sources.nature });
+                sourcesChart.data.datasets[6].data.push({ x: timestamp, y: item.data.sources.siren });
+                sourcesChart.data.datasets[7].data.push({ x: timestamp, y: item.data.sources.vehicles });
             });
 
-            // Update the chart to reflect changes
-            sensorChart.update();*/
+            sourcesChart.update();
         }
 
         // Fetch data every 1 second to simulate real-time updates

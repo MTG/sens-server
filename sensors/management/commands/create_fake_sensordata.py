@@ -67,12 +67,12 @@ class Command(BaseCommand):
             data['leq'] += random.uniform(-0.5, 0.5)
 
             # Randomly add or remove sources
-            if random.random() < 0.1:  # 10% chance to add/remove a source
-                if random.random() < 0.5 and len(data['sources']) > 1:
-                    data['sources'].pop(random.choice(list(data['sources'].keys())))
-                else:
-                    new_source = f'source_{random.randint(1, 100)}'
-                    data['sources'][new_source] = random.uniform(0, 1)
+            #if random.random() < 0.1:  # 10% chance to add/remove a source
+            #    if random.random() < 0.5 and len(data['sources']) > 1:
+            #        data['sources'].pop(random.choice(list(data['sources'].keys())))
+            #    else:
+            #        new_source = f'source_{random.randint(1, 100)}'
+            #        data['sources'][new_source] = random.uniform(0, 1)
 
             # Create SensorData object
             SensorData.objects.create(
