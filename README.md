@@ -31,6 +31,10 @@ Server-side infrastructure for SENS acoustic sensors
 
 6. You can visit the admin site (log in with the superuser account) at `http://localhost:8000/sens/admin/`
 
+7. For development purposes, it will be useful to generate some fake recent sensor data. The following command will generate sensor data for a fake sensor with ID 'fake_sensor' for the last 12 hours.
+
+    docker compose run --rm web python manage.py create_fake_sensordata
+
 
 ## Steps to deploy
 

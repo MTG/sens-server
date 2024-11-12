@@ -27,10 +27,11 @@
             <option value="720">Last 12 Hours</option>
             <option value="1440">Last 24 Hours</option>
         </select>
+        <div id="sensorCharts"></div>
         <canvas id="sensorChart"></canvas>
     </div>
 
-    <h2>Sensor Data:</h2>
+    <h2>Sensor Data (maximum 1000 data points):</h2>
 
     <form method="get">
         <label for="start_date">Start Date:</label>
@@ -63,10 +64,57 @@
 
     <script type="text/javascript">
         const sensorId = "{{ sensor_id }}"; // Replace with the specific sensor ID or make it dynamic 
-        
-        // Initialize Chart.js chart
-        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const sensorChart = new Chart(ctx, {
+        const sensorChartsWrapper = document.getElementById('sensorCharts');
+
+        // Initialize Chart.js charts
+        const sourcesChartCanvas = document.createElement('canvas');
+        const isoChartCanvas = document.createElement('canvas');
+
+        sensorChartsWrapper.appendChild(isoChartCanvas);
+        sensorChartsWrapper.appendChild(sourcesChartCanvas);
+
+        // The ISO chart will contain timeseries for properties:
+        // - Pleasantness
+        // - Pleasantness Inst
+        // - Eventfulness
+        // - Eventfulness Inst
+        const isoChart = new Chart(isoChartCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                datasets: [
+                    { label: 'Pleasantness', data: [], borderColor: 'blue', fill: false },
+                    { label: 'Pleasantness Inst', data: [], borderColor: 'darkBlue', fill: false },
+                    { label: 'Eventfulness', data: [], borderColor: 'green', fill: false },
+                    { label: 'Eventfulness Inst', data: [], borderColor: 'darkGreen', fill: false },
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 0
+                }
+            }
+        });
+
+        // The sources chart will contain timeseries for the automatically detected sound sources, which can be arbitrary
+        const sourcesChart = new Chart(sourcesChartCanvas.getContext('2d'), {
             type: 'line',
             data: {
                 datasets: []
@@ -99,18 +147,21 @@
         // Function to fetch data and update the chart
         async function fetchSensorData() {
 
+            // Define current start and end time
             const selectedRange = parseInt(document.getElementById("timeRange").value);
             const currentTime = new Date();
             const startTime = new Date(currentTime - selectedRange * 60 * 1000); // Convert minutes to milliseconds
-            
-            sensorChart.options.scales.x.min = startTime;
-            sensorChart.options.scales.x.max = currentTime;
+
+            // Update chart time axis
+            isoChart.options.scales.x.min = startTime;
+            isoChart.options.scales.x.max = currentTime;
+            sourcesChart.options.scales.x.min = startTime;
+            sourcesChart.options.scales.x.max = currentTime;
             
             // Add "start_date" and "end_date" parameters to the apiUrl following this format: .../?start_date=2023-10-01T00:00:00Z&end_date=2025-10-10T23:59:59Z
             // API endpoint to get sensor data filtered by sensor ID and time range
-            const currentTimeWithTimezone = new Date(currentTime.getTime() - (currentTime.getTimezoneOffset() * 60 * 1000))
-            const startTimeWithTimezone = new Date(startTime.getTime() - (startTime.getTimezoneOffset() * 60 * 1000))
-            const apiUrl = "{{ api_endpoint_url }}" + sensorId + '/time-range/?start_date=' + startTimeWithTimezone.toISOString() + '&end_date=' + currentTimeWithTimezone.toISOString();
+            const apiUrl = "{{ api_endpoint_url }}" + sensorId + '/time-range/?start_date=' + startTime.toISOString() + '&end_date=' + currentTime.toISOString();
+            console.log(apiUrl)
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
@@ -123,14 +174,37 @@
         // Function to update chart data
         function updateChart(data) {
 
-            // Create new datasets for chart dynamically according to the data received
-            // Dynamically create datasets with sources from the first data point
-            const datasets = [
-                { label: 'Pleasantness', data: [], borderColor: 'blue', fill: false },
-                { label: 'Pleasantness Inst', data: [], borderColor: 'blue', fill: false },
-                { label: 'Eventfulness', data: [], borderColor: 'green', fill: false },
-                { label: 'Eventfulness Inst', data: [], borderColor: 'green', fill: false },
-            ];
+            // Update isoChart data
+            isoChart.data.datasets[0].data = [];
+            isoChart.data.datasets[1].data = [];
+            isoChart.data.datasets[2].data = [];
+            isoChart.data.datasets[3].data = [];
+
+            data.forEach(item => {
+                const timestamp = new Date(item.sensor_timestamp);
+                isoChart.data.datasets[0].data.push({ x: timestamp, y: item.data.pleasantness_intg });
+                isoChart.data.datasets[1].data.push({ x: timestamp, y: item.data.pleasantness_inst });
+                isoChart.data.datasets[2].data.push({ x: timestamp, y: item.data.eventfulness_intg });
+                isoChart.data.datasets[3].data.push({ x: timestamp, y: item.data.eventfulness_inst });
+            });
+
+            isoChart.update();
+
+            /*
+            // Update sources chart data
+            // Here we will dynamically create datasets for each source detected, and we might need to remove some as well
+            const listOfSources = []
+            for (let i = 0; i < data.length; i++) {
+                const sources = data[i].data.sources;
+                Object.keys(sources).forEach(source => {
+                    if (!listOfSources.includes(source)) {
+                        listOfSources.push(source);
+                    }
+                });
+            }
+            
+
+      
 
             const exampleDataPoint = data[0];
 
@@ -158,18 +232,13 @@
             // Add data to the datasets
             data.forEach(item => {
                 const timestamp = new Date(item.sensor_timestamp);
-                const timestampWithTimezone = new Date(timestamp.getTime() + (timestamp.getTimezoneOffset() * 60 * 1000))
-                sensorChart.data.datasets[0].data.push({ x: timestampWithTimezone, y: item.data.pleasantness_intg });
-                sensorChart.data.datasets[1].data.push({ x: timestampWithTimezone, y: item.data.pleasantness_inst });
-                sensorChart.data.datasets[2].data.push({ x: timestampWithTimezone, y: item.data.eventfulness_intg });
-                sensorChart.data.datasets[3].data.push({ x: timestampWithTimezone, y: item.data.eventfulness_inst });
                 Object.keys(datasetSourcesMap).forEach((source, index) => {
-                    sensorChart.data.datasets[index].data.push({ x: timestampWithTimezone, y: item.data.sources[source] });
+                    sensorChart.data.datasets[index].data.push({ x: timestamp, y: item.data.sources[source] });
                 });
             });
 
             // Update the chart to reflect changes
-            sensorChart.update();
+            sensorChart.update();*/
         }
 
         // Fetch data every 1 second to simulate real-time updates

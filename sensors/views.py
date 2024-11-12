@@ -87,7 +87,7 @@ def get_sensor_data_by_sensor_and_time_range(request, sensor_id):
         sensor_id=sensor_id,
         sensor_timestamp__gte=start_datetime,
         sensor_timestamp__lte=end_datetime
-    )
+    )[0:1000]  # Limit the number of results to 1000
 
     # Serialize and return the filtered data
     serializer = SensorDataSerializer(sensor_data, many=True)
