@@ -50,8 +50,10 @@ def deploy(ctx, branch="main"):
 
             # Migrate
             c.run(f"docker compose -f {compose_file} run --rm {server_service_name} python manage.py migrate")
-            
 
+            # Collect static files
+            c.run(f"docker compose -f {compose_file} run --rm {server_service_name} python manage.py collectstatic --noinput")
+        
             # Restart
             c.run(f"docker compose -f {compose_file} stop")
             c.run(f"docker compose -f {compose_file} up -d")
