@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+
+  web:
+    build: .
+    init: true
+    command: uwsgi --chdir=/app --module=sens_server.wsgi:application --env DJANGO_SETTINGS_MODULE=sens_server.settings --http :8800 --socket sens-server.sock
+    restart: always
+    stop_signal: SIGINT
+    volumes:
+      - .:/app
+    ports:
+      - "0.0.0.0:8800:8800"
+    environment:
+      - PRODUCTION=1
+      - API_BASE_URL=https://labs.freesound.org/sens/api

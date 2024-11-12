@@ -1,5 +1,5 @@
 # Use the official Python image
-FROM python:3.10-slim
+FROM python:3.12
 
 # Set the working directory in the container
 WORKDIR /app
@@ -16,6 +16,3 @@ COPY . .
 # Set environment variables for Django
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-
-# Run migrations and start the Django development server
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]

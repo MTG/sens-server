@@ -4,7 +4,7 @@ import uuid
 import os
 import datetime
 
-API_BASE_URL = 'https://labs.freesound.org/sens/api'
+API_BASE_URL = os.getenv('API_BASE_URL',  'https://labs.freesound.org/sens/api')
 LOCAL_COPY_DATA_PATH = 'posted'
 
 # Get SENSOR_ID from a file named sensor_id.txt which should be in the same directory

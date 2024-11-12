@@ -10,4 +10,4 @@ services:
     ports:
       - "8800:8800"
     environment:
-      - API_BASE_URL=https://labs.freesound.org/sens/api
+      - API_BASE_URL=http://localhost:8800/sens/api
