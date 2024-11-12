@@ -32,6 +32,16 @@ Server-side infrastructure for SENS acoustic sensors
 6. You can visit the admin site (log in with the superuser account) at `http://localhost:8000/sens/admin/`
 
 
+## Steps to deploy
+
+1. Run following deploy command:
+
+    docker-compose run --rm web fab deploy
+
+
+Note this needs to done from a server that has access to `fs-labs.s.upf.edu`.
+
+
 ## API
 
 ### Post sensor data
