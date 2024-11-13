@@ -21,7 +21,7 @@
 
     <div id="chart-container">
         <label for="timeRange">Select Time Range:</label>
-        <select id="timeRange" onchange="fetchSensorData();">
+        <select id="timeRange" onchange="newTimeRangeSelected()">
             <option value="1">Last Minute</option>
             <option value="60" selected>Last Hour</option>
             <option value="720">Last 12 Hours</option>
@@ -237,11 +237,11 @@
             chart.options.scales.x.max = currentTime;
         }
 
-        resetZoomButton.onclick = function() {
+        function resetChartsZoom() {
+            resetZoomButton.disabled = true;
             isoChart.isZommed = false;
             sourcesChart.isZommed = false;
             leqChart.isZommed = false;
-            resetZoomButton.disabled = true;
             isoChart.resetZoom();
             sourcesChart.resetZoom();
             leqChart.resetZoom();
@@ -251,6 +251,10 @@
             isoChart.update();
             sourcesChart.update();
             leqChart.update();
+        }
+
+        resetZoomButton.onclick = function() {
+            resetChartsZoom();
         };
         
         // Function to fetch data and update the chart
@@ -332,9 +336,16 @@
             leqChart.update();
         }
 
-        // Fetch data every 1 second to simulate real-time updates
-        fetchSensorData()
-        setInterval(fetchSensorData, 3000);
+        newTimeRangeSelected = function() {
+            fetchSensorData();
+            resetChartsZoom();
+        }
+
+        // When page loads, fetch sensor data
+        fetchSensorData();
+
+        // Fetch data every 5 seconds to get real-time updates
+        setInterval(fetchSensorData, 5000);
 
     </script>
 </body>
