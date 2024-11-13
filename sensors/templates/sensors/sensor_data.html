@@ -40,9 +40,11 @@
         // Initialize Chart.js charts
         const sourcesChartCanvas = document.createElement('canvas');
         const isoChartCanvas = document.createElement('canvas');
+        const leqChartCanvas = document.createElement('canvas');
 
         sensorChartsWrapper.appendChild(isoChartCanvas);
         sensorChartsWrapper.appendChild(sourcesChartCanvas);
+        sensorChartsWrapper.appendChild(leqChartCanvas);
 
         // The ISO chart will contain timeseries for properties:
         // - Pleasantness
@@ -171,6 +173,62 @@
             }
         });
 
+        // Create chart for displaying Leq values
+        const leqChart = new Chart(leqChartCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                datasets: [
+                    { label: 'Leq', data: [], borderColor: 'blue', fill: false },
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'dB'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 0
+                },
+                plugins: {
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                modifierKey: 'alt',
+                                mode: 'x',
+                            },
+                            drag: {
+                                enabled: true,
+                            },
+                            onZoom: function({chart}) {
+                                // Stop real-time updates
+                                leqChart.isZommed = true;
+                                resetZoomButton.disabled = false;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
         function adjustChartTimeScale(chart) {
             const selectedRange = parseInt(document.getElementById("timeRange").value);
             const currentTime = new Date();
@@ -182,13 +240,17 @@
         resetZoomButton.onclick = function() {
             isoChart.isZommed = false;
             sourcesChart.isZommed = false;
+            leqChart.isZommed = false;
             resetZoomButton.disabled = true;
             isoChart.resetZoom();
             sourcesChart.resetZoom();
+            leqChart.resetZoom();
             adjustChartTimeScale(isoChart);
             adjustChartTimeScale(sourcesChart)
+            adjustChartTimeScale(leqChart);
             isoChart.update();
             sourcesChart.update();
+            leqChart.update();
         };
         
         // Function to fetch data and update the chart
@@ -205,6 +267,9 @@
             }
             if (sourcesChart.isZommed !== true){
                 adjustChartTimeScale(sourcesChart);
+            }
+            if (leqChart.isZommed !== true){
+                adjustChartTimeScale(leqChart);
             }
 
             // Add "start_date" and "end_date" parameters to the apiUrl following this format: .../?start_date=2023-10-01T00:00:00Z&end_date=2025-10-10T23:59:59Z
@@ -227,7 +292,6 @@
             isoChart.data.datasets[1].data = [];
             isoChart.data.datasets[2].data = [];
             isoChart.data.datasets[3].data = [];
-
             data.forEach(item => {
                 const timestamp = new Date(item.sensor_timestamp);
                 isoChart.data.datasets[0].data.push({ x: timestamp, y: item.data.pleasantness_intg });
@@ -235,7 +299,6 @@
                 isoChart.data.datasets[2].data.push({ x: timestamp, y: item.data.eventfulness_intg });
                 isoChart.data.datasets[3].data.push({ x: timestamp, y: item.data.eventfulness_inst });
             });
-
             isoChart.update();
 
             // Update sourcesChart data
@@ -247,7 +310,6 @@
             sourcesChart.data.datasets[5].data = [];
             sourcesChart.data.datasets[6].data = [];
             sourcesChart.data.datasets[7].data = [];
-
             data.forEach(item => {
                 const timestamp = new Date(item.sensor_timestamp);
                 sourcesChart.data.datasets[0].data.push({ x: timestamp, y: item.data.sources.birds });
@@ -259,8 +321,15 @@
                 sourcesChart.data.datasets[6].data.push({ x: timestamp, y: item.data.sources.siren });
                 sourcesChart.data.datasets[7].data.push({ x: timestamp, y: item.data.sources.vehicles });
             });
-
             sourcesChart.update();
+
+            // Update leqChart data
+            leqChart.data.datasets[0].data = [];
+            data.forEach(item => {
+                const timestamp = new Date(item.sensor_timestamp);
+                leqChart.data.datasets[0].data.push({ x: timestamp, y: item.data.leq });
+            });
+            leqChart.update();
         }
 
         // Fetch data every 1 second to simulate real-time updates
