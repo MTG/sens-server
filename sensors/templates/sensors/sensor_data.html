@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0"></script>
     <style>
         #chart-container {
             width: 80%;
@@ -16,9 +17,8 @@
     </style>
 </head>
 <body>
-    <h1>Data for Sensor: {{ sensor_id }}</h1>
+    <h1>Real-time data for sensor: {{ sensor_id }}</h1>
 
-    <h2>Real-time data:</h2>
     <div id="chart-container">
         <label for="timeRange">Select Time Range:</label>
         <select id="timeRange" onchange="fetchSensorData();">
@@ -27,44 +27,15 @@
             <option value="720">Last 12 Hours</option>
             <option value="1440">Last 24 Hours</option>
         </select>
+        <button id="reset-zoom-button" disabled>Reset Zoom</button>
         <div id="sensorCharts"></div>
         <canvas id="sensorChart"></canvas>
     </div>
 
-    <h2>Sensor Data (maximum 1000 data points):</h2>
-
-    <form method="get">
-        <label for="start_date">Start Date:</label>
-        <input type="date" id="start_date" name="start_date" value="{{ start_date|date:"Y-m-d" }}">
-        
-        <label for="end_date">End Date:</label>
-        <input type="date" id="end_date" name="end_date" value="{{ end_date|date:"Y-m-d" }}">
-        
-        <button type="submit">Filter</button>
-    </form>
-
-    <table border="1">
-        <tr>
-            <th>Sensor timestamp</th>
-            <th>Location</th>
-            <th>Data</th>
-        </tr>
-        {% for data in sensor_data %}
-        <tr>
-            <td>{{ data.sensor_timestamp }}</td>
-            <td>{{ data.location }}</td>
-            <td>{{ data.data }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="3">No data available for this sensor in the given date range.</td>
-        </tr>
-        {% endfor %}
-    </table>
-
     <script type="text/javascript">
         const sensorId = "{{ sensor_id }}"; // Replace with the specific sensor ID or make it dynamic 
         const sensorChartsWrapper = document.getElementById('sensorCharts');
+        const resetZoomButton = document.getElementById('reset-zoom-button');
 
         // Initialize Chart.js charts
         const sourcesChartCanvas = document.createElement('canvas');
@@ -109,6 +80,29 @@
                 },
                 animation: {
                     duration: 0
+                },
+                plugins: {
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                modifierKey: 'alt',
+                                mode: 'x',
+                            },
+                            drag: {
+                                enabled: true,
+                            },
+                            onZoom: function({chart}) {
+                                // Stop real-time updates
+                                isoChart.isZommed = true;
+                                resetZoomButton.disabled = false;
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -150,9 +144,52 @@
                 },
                 animation: {
                     duration: 0
+                },
+                plugins: {
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                modifierKey: 'alt',
+                                mode: 'x',
+                            },
+                            drag: {
+                                enabled: true,
+                            },
+                            onZoom: function({chart}) {
+                                // Stop real-time updates
+                                isoChart.isZommed = true;
+                                resetZoomButton.disabled = false;
+                            }
+                        }
+                    }
                 }
             }
         });
+
+        function adjustChartTimeScale(chart) {
+            const selectedRange = parseInt(document.getElementById("timeRange").value);
+            const currentTime = new Date();
+            const startTime = new Date(currentTime - selectedRange * 60 * 1000); // Convert minutes to milliseconds
+            chart.options.scales.x.min = startTime;
+            chart.options.scales.x.max = currentTime;
+        }
+
+        resetZoomButton.onclick = function() {
+            isoChart.isZommed = false;
+            sourcesChart.isZommed = false;
+            resetZoomButton.disabled = true;
+            isoChart.resetZoom();
+            sourcesChart.resetZoom();
+            adjustChartTimeScale(isoChart);
+            adjustChartTimeScale(sourcesChart)
+            isoChart.update();
+            sourcesChart.update();
+        };
         
         // Function to fetch data and update the chart
         async function fetchSensorData() {
@@ -163,11 +200,13 @@
             const startTime = new Date(currentTime - selectedRange * 60 * 1000); // Convert minutes to milliseconds
 
             // Update chart time axis
-            isoChart.options.scales.x.min = startTime;
-            isoChart.options.scales.x.max = currentTime;
-            sourcesChart.options.scales.x.min = startTime;
-            sourcesChart.options.scales.x.max = currentTime;
-            
+            if (isoChart.isZommed !== true){
+                adjustChartTimeScale(isoChart);
+            }
+            if (sourcesChart.isZommed !== true){
+                adjustChartTimeScale(sourcesChart);
+            }
+
             // Add "start_date" and "end_date" parameters to the apiUrl following this format: .../?start_date=2023-10-01T00:00:00Z&end_date=2025-10-10T23:59:59Z
             // API endpoint to get sensor data filtered by sensor ID and time range
             const apiUrl = "{{ api_endpoint_url }}" + sensorId + '/time-range/?start_date=' + startTime.toISOString() + '&end_date=' + currentTime.toISOString();

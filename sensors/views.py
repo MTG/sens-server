@@ -104,33 +104,9 @@ def list_sensor_ids(request):
 
 
 def sensor_data_view(request, sensor_id):
-    # Get query parameters for date filtering
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-
-    # Parse the start and end dates if provided
-    if start_date:
-        start_date = parse_datetime(start_date)
-    if end_date:
-        end_date = parse_datetime(end_date)
-
-    # Build the filter query
-    filter_query = Q(sensor_id=sensor_id)
-    
-    if start_date:
-        filter_query &= Q(sensor_timestamp__gte=start_date)
-    if end_date:
-        filter_query &= Q(sensor_timestamp__lte=end_date)
-
-    # Retrieve the filtered sensor data
-    sensor_data = SensorData.objects.filter(filter_query)
-
-    # Render the data using a template
-    return render(request, 'sensors/sensor_data.html', {
-        'sensor_data': sensor_data,
+    # View to show real-time sensor data
+    return render(request, 'sensors/sensor_data.html', { 
         'sensor_id': sensor_id,
-        'start_date': start_date,
-        'end_date': end_date,
         'api_endpoint_url': os.getenv('API_BASE_URL') +  f'/sensor-data/'
     })
 
