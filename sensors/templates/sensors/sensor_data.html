@@ -56,9 +56,9 @@
             data: {
                 datasets: [
                     { label: 'Pleasantness', data: [], borderColor: 'blue', fill: false },
-                    { label: 'Pleasantness Inst', data: [], borderColor: 'darkBlue', fill: false },
+                    { label: 'Pleasantness Inst', data: [], borderColor: 'darkBlue', fill: false, borderDash: [5, 5] },
                     { label: 'Eventfulness', data: [], borderColor: 'green', fill: false },
-                    { label: 'Eventfulness Inst', data: [], borderColor: 'darkGreen', fill: false },
+                    { label: 'Eventfulness Inst', data: [], borderColor: 'darkGreen', fill: false, borderDash: [5, 5] },
                 ]
             },
             options: {
@@ -74,6 +74,8 @@
                         }
                     },
                     y: {
+                        min: -1,
+                        max: 1,
                         title: {
                             display: true,
                             text: 'Value'
@@ -138,6 +140,8 @@
                         }
                     },
                     y: {
+                        min: 0,
+                        max: 1,
                         title: {
                             display: true,
                             text: 'Value'
@@ -194,6 +198,8 @@
                         }
                     },
                     y: {
+                        min: 30,
+                        max: 120,
                         title: {
                             display: true,
                             text: 'dB'
