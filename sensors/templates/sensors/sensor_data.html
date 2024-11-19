@@ -341,6 +341,7 @@
 
             // Update leqChart data
             leqChart.data.datasets[0].data = [];
+            leqChart.data.datasets[1].data = [];
             data.forEach(item => {
                 const timestamp = new Date(item.sensor_timestamp);
                 leqChart.data.datasets[0].data.push({ x: timestamp, y: item.data.leq });
