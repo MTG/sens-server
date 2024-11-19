@@ -187,6 +187,7 @@
             data: {
                 datasets: [
                     { label: 'Leq', data: [], borderColor: 'blue', fill: false },
+                    { label: 'LAeq', data: [], borderColor: 'red', fill: false },
                 ]
             },
             options: {
@@ -343,6 +344,7 @@
             data.forEach(item => {
                 const timestamp = new Date(item.sensor_timestamp);
                 leqChart.data.datasets[0].data.push({ x: timestamp, y: item.data.leq });
+                leqChart.data.datasets[1].data.push({ x: timestamp, y: item.data.LAeq });
             });
             leqChart.update();
         }
