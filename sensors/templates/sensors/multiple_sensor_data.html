@@ -37,75 +37,85 @@
         const sensorIds = {{ sensor_ids|safe }};
         const sensorChartsWrapper = document.getElementById('sensorCharts');
         const resetZoomButton = document.getElementById('reset-zoom-button');
-        
-        // Initialize Chart.js charts);
-        const colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'cyan', 'magenta', 'yellow', 'black'];
-        const leqChartCanvas = document.createElement('canvas');
-        sensorChartsWrapper.appendChild(leqChartCanvas);
-     
-        // Create chart for displaying Leq values
+        const allCharts = [];
+            
+        function makeChart(dataMappings, y_min, y_max, y_label) {
+            const colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'cyan', 'magenta', 'yellow', 'black'];
+            const chartCanvas = document.createElement('canvas');
+            const datasets = []
+            let k = 0;
+            sensorIds.forEach(function(sensorId, i) {
+                dataMappings.forEach(function(mapping, j) {
+                    datasets.push({ 
+                        label: sensorId + '-' + mapping.label, 
+                        data: [], 
+                        borderColor: colors[k%colors.length], 
+                        fill: false,
+                        dataMapping: mapping});
+                    k += 1;
+                });  
+            });
 
-        const datasets = []
-        
-        sensorIds.forEach(function(sensorId, i) {
-            datasets.push({ label: sensorId, data: [], borderColor: colors[i], fill: false });
-        });
-        
-        const leqChart = new Chart(leqChartCanvas.getContext('2d'), {
-            type: 'line',
-            data: {
-                datasets: datasets
-            },
-            options: {
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'minute'
+            const chart = new Chart(chartCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'minute'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
                         },
-                        title: {
-                            display: true,
-                            text: 'Time'
+                        y: {
+                            min: y_min,
+                            max: y_max,
+                            title: {
+                                display: true,
+                                text: y_label
+                            }
                         }
                     },
-                    y: {
-                        min: 40,
-                        max: 90,
-                        title: {
-                            display: true,
-                            text: 'dB'
-                        }
-                    }
-                },
-                animation: {
-                    duration: 0
-                },
-                plugins: {
-                    zoom: {
-                        pan: {
-                            enabled: true,
-                            mode: 'x',
-                        },
+                    animation: {
+                        duration: 0
+                    },
+                    plugins: {
                         zoom: {
-                            wheel: {
+                            pan: {
                                 enabled: true,
-                                modifierKey: 'alt',
                                 mode: 'x',
                             },
-                            drag: {
-                                enabled: true,
-                            },
-                            onZoom: function({chart}) {
-                                // Stop real-time updates
-                                leqChart.isZommed = true;
-                                resetZoomButton.disabled = false;
-                            },
-                            onZoomStart: e => e.point.x > e.chart.chartArea.left && e.point.x < e.chart.chartArea.right && e.point.y > e.chart.chartArea.top && e.point.y < e.chart.chartArea.bottom
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    modifierKey: 'alt',
+                                    mode: 'x',
+                                },
+                                drag: {
+                                    enabled: true,
+                                },
+                                onZoomStart: e => e.point.x > e.chart.chartArea.left && e.point.x < e.chart.chartArea.right && e.point.y > e.chart.chartArea.top && e.point.y < e.chart.chartArea.bottom
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+            chart.isZommed = false;
+            chart.options.plugins.zoom.zoom.onZoom = function(chart) {
+                // Stop real-time updates
+                chart.isZommed = true;
+                resetZoomButton.disabled = false;
+            };
+            sensorChartsWrapper.appendChild(chartCanvas);
+            allCharts.push(chart);
+            return chart;
+        }
 
         function adjustChartTimeScale(chart) {
             const startTime = new Date(document.getElementById("start_time").value);
@@ -114,48 +124,65 @@
             chart.options.scales.x.max = endTime;
         }
 
-        function resetChartsZoom() {
+        function resetChartZoom(chart) {
             resetZoomButton.disabled = true;
-            leqChart.isZommed = false;
-            leqChart.resetZoom();
-            adjustChartTimeScale(leqChart);
-            leqChart.update();
+            chart.isZommed = false;
+            chart.resetZoom();
+            adjustChartTimeScale(chart);
+            chart.update();
         }
 
         resetZoomButton.onclick = function() {
-            resetChartsZoom();
+            allCharts.forEach(function(chart) {
+                resetChartZoom(chart);
+            });
         };
-        
+      
         // Function to fetch data and update the chart
-        async function fetchIndividualSensorData(sensorId, startTime, endTime) {
-            const apiUrl = "{{ api_endpoint_url }}" + sensorId + '/time-range/?start_date=' + startTime.toISOString() + '&end_date=' + endTime.toISOString();
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                const dataPreparedForUpdate = data.map(function(item) {
-                    return { x: new Date(item.sensor_timestamp), y: item.data.leq };
-                });
-
-                updateChartDataset(leqChart, sensorId, dataPreparedForUpdate);
-            } catch (error) {
-                console.error("Error fetching sensor data:", error);
-            }
-        }
-
         function fetchSensorData() {
             // Define current start and end time
             const startTime = new Date(document.getElementById("start_time").value);
             const endTime = new Date(document.getElementById("end_time").value);
 
-            // Update chart time axis
-            if (leqChart.isZommed !== true){
-                adjustChartTimeScale(leqChart);
-            }
-
+            // Update charts time axis
+            allCharts.forEach(function(chart) {
+                if (chart.isZommed !== true){
+                    adjustChartTimeScale(chart);
+                }
+            });
+            
             // Loop through each sensor ID and fetch data
             sensorIds.forEach(function (sensorId) {
                 fetchIndividualSensorData(sensorId, startTime, endTime);
             });
+        }
+
+        async function fetchIndividualSensorData(sensorId, startTime, endTime) {
+            const apiUrl = "{{ api_endpoint_url }}" + sensorId + '/time-range/?start_date=' + startTime.toISOString() + '&end_date=' + endTime.toISOString();
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                updateChartsFromData(data);
+                
+            } catch (error) {
+                console.error("Error fetching sensor data:", error);
+            }
+        }
+
+        function updateChartsFromData(data) {
+            allCharts.forEach(function(chart) {
+                chart.data.datasets.forEach(function(dataset) {
+                    const dataMapping = dataset.dataMapping;
+                    try {
+                        const dataPreparedForUpdate = data.map(function(item) {
+                            return { x: new Date(item.sensor_timestamp), y: item.data[dataMapping.dataPath] };
+                        });
+                        updateChartDataset(chart, dataset.label, dataPreparedForUpdate);
+                    } catch (error) {
+                        console.log("Error updating chart dataset:", dataset.label, error);
+                    }
+                });
+            });           
         }
 
         // Function to update chart dataset data
@@ -169,6 +196,29 @@
             chart.data.datasets[datasetIndex].data = dataPreparedForUpdate;
             chart.update();
         }
+
+        // Make charts
+        makeChart([
+            {label: 'Leq', dataPath: 'leq'}
+        ], 40, 90, 'dB'); // Leq
+        
+        makeChart([
+            {label: 'Pleasantness', dataPath: 'pleasantness_intg'},
+            {label: 'Pleasantness inst', dataPath: 'pleasantness_inst'},
+            {label: 'Eventfulness', dataPath: 'eventfulness_intg'},
+            {label: 'Eventfulness inst', dataPath: 'eventfulness_inst'}
+        ], -0.5, 0.5, ''); // Perceptual attributes
+
+        makeChart([
+            {label: 'Birds', dataPath: 'sources.birds'},
+            {label: 'Construction', dataPath: 'soruces.construction'},
+            {label: 'Dogs', dataPath: 'sources.dogs'},
+            {label: 'Human', dataPath: 'sources.human'},
+            {label: 'Music', dataPath: 'sources.music'},
+            {label: 'Nature', dataPath: 'sources.nature'},
+            {label: 'Siren', dataPath: 'sources.siren'},
+            {label: 'Vehicles', dataPath: 'sources.vehicles'},
+        ], 0.0, 1.0, ''); // Sources
 
         // When page loads, fetch sensor data
         fetchSensorData();
