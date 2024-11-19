@@ -11,7 +11,8 @@ urlpatterns = [
     
     # Web views
     path('sensor/<str:sensor_id>/', views.sensor_data_view, name='sensor_data_view'),
-
+    path('multiple_sensors/', views.multiple_sensor_data_view, name='multiple_sensor_data_view'),
+    
     # Frontpage
     path('', views.frontpage, name='frontpage'),
 ]

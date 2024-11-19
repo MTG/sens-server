@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple sensor data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0"></script>
+    <style>
+        #chart-container {
+            width: 80%;
+            margin: auto;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sensor data for: {{ sensor_ids }}</h1>
+
+    <form method="get" action="">
+        <label for="start_time">Start Time:</label>
+        <input type="datetime-local" id="start_time" name="start_time" value="{{ start_time|date:'Y-m-d\\TH:i' }}" required>
+        <label for="end_time">End Time:</label>
+        <input type="datetime-local" id="end_time" name="end_time" value="{{ end_time|date:'Y-m-d\\TH:i' }}"  required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="chart-container">
+        <button id="reset-zoom-button" disabled>Reset Zoom</button>
+        <div id="sensorCharts"></div>
+    </div>
+
+
+    <script type="text/javascript">
+        const sensorIds = {{ sensor_ids|safe }};
+        const sensorChartsWrapper = document.getElementById('sensorCharts');
+        const resetZoomButton = document.getElementById('reset-zoom-button');
+        
+        // Initialize Chart.js charts);
+        const colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'cyan', 'magenta', 'yellow', 'black'];
+        const leqChartCanvas = document.createElement('canvas');
+        sensorChartsWrapper.appendChild(leqChartCanvas);
+     
+        // Create chart for displaying Leq values
+
+        const datasets = []
+        
+        sensorIds.forEach(function(sensorId, i) {
+            datasets.push({ label: sensorId, data: [], borderColor: colors[i], fill: false });
+        });
+        
+        const leqChart = new Chart(leqChartCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        min: 40,
+                        max: 90,
+                        title: {
+                            display: true,
+                            text: 'dB'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 0
+                },
+                plugins: {
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                modifierKey: 'alt',
+                                mode: 'x',
+                            },
+                            drag: {
+                                enabled: true,
+                            },
+                            onZoom: function({chart}) {
+                                // Stop real-time updates
+                                leqChart.isZommed = true;
+                                resetZoomButton.disabled = false;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function adjustChartTimeScale(chart) {
+            const startTime = new Date(document.getElementById("start_time").value);
+            const endTime =new Date(document.getElementById("end_time").value);
+            chart.options.scales.x.min = startTime;
+            chart.options.scales.x.max = endTime;
+        }
+
+        function resetChartsZoom() {
+            resetZoomButton.disabled = true;
+            leqChart.isZommed = false;
+            leqChart.resetZoom();
+            adjustChartTimeScale(leqChart);
+            leqChart.update();
+        }
+
+        resetZoomButton.onclick = function() {
+            resetChartsZoom();
+        };
+        
+        // Function to fetch data and update the chart
+        async function fetchIndividualSensorData(sensorId, startTime, endTime) {
+            const apiUrl = "{{ api_endpoint_url }}" + sensorId + '/time-range/?start_date=' + startTime.toISOString() + '&end_date=' + endTime.toISOString();
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                const dataPreparedForUpdate = data.map(function(item) {
+                    return { x: new Date(item.sensor_timestamp), y: item.data.leq };
+                });
+
+                updateChartDataset(leqChart, sensorId, dataPreparedForUpdate);
+            } catch (error) {
+                console.error("Error fetching sensor data:", error);
+            }
+        }
+
+        function fetchSensorData() {
+            // Define current start and end time
+            const startTime = new Date(document.getElementById("start_time").value);
+            const endTime = new Date(document.getElementById("end_time").value);
+
+            // Update chart time axis
+            if (leqChart.isZommed !== true){
+                adjustChartTimeScale(leqChart);
+            }
+
+            // Loop through each sensor ID and fetch data
+            sensorIds.forEach(function (sensorId) {
+                fetchIndividualSensorData(sensorId, startTime, endTime);
+            });
+        }
+
+        // Function to update chart dataset data
+        function updateChartDataset(chart, datasetLabel, dataPreparedForUpdate) {
+            const datasetIndex = chart.data.datasets.findIndex(function(dataset) {return dataset.label === datasetLabel});
+            if (datasetIndex === -1) {
+                console.error("Dataset not found in chart:", datasetLabel);
+                return;
+            }
+            // Update chart data
+            chart.data.datasets[datasetIndex].data = dataPreparedForUpdate;
+            chart.update();
+        }
+
+        // When page loads, fetch sensor data
+        fetchSensorData();
+    </script>
+</body>
+</html>

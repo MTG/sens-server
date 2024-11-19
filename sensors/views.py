@@ -1,4 +1,5 @@
 import os 
+import datetime
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -97,7 +98,7 @@ def get_sensor_data_by_sensor_and_time_range(request, sensor_id):
 @api_view(['GET'])
 def list_sensor_ids(request):
     # Retrieve distinct sensor IDs from the SensorData model
-    sensor_ids = SensorData.objects.values_list('sensor_id', flat=True).distinct()
+    sensor_ids = list(set(SensorData.objects.values_list('sensor_id', flat=True)))
 
     # Return the list of sensor IDs
     return Response(list(sensor_ids), status=status.HTTP_200_OK)
@@ -110,6 +111,30 @@ def sensor_data_view(request, sensor_id):
         'api_endpoint_url': os.getenv('API_BASE_URL') +  f'/sensor-data/'
     })
 
+
+def multiple_sensor_data_view(request):
+    # View to show real-time sensor data for multiple sensors
+    start_time = request.GET.get('start_time')
+    end_time = request.GET.get('end_time')
+
+    if not start_time or not end_time:
+        start_time = (datetime.datetime.now() - datetime.timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M')
+        end_time = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M')
+
+    try:
+        start_time = datetime.datetime.strptime(start_time, '%Y-%m-%dT%H:%M')
+        end_time = datetime.datetime.strptime(end_time, '%Y-%m-%dT%H:%M')
+    except ValueError:
+        raise Exception("Invalid time format. Please use 'YYYY-MM-DDTHH:MM'.")
+        
+    sensor_ids = list(set(SensorData.objects.filter(sensor_timestamp__range=(start_time, end_time)).values_list('sensor_id', flat=True)))
+
+    return render(request, 'sensors/multiple_sensor_data.html', {
+        'sensor_ids': sensor_ids,
+        'start_time': start_time,
+        'end_time': end_time,
+        'api_endpoint_url': os.getenv('API_BASE_URL') + f'/sensor-data/'
+    })
 
 def frontpage(request):
     return render(request, 'sensors/frontpage.html', {
