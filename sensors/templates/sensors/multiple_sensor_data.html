@@ -37,23 +37,29 @@
         const sensorIds = {{ sensor_ids|safe }};
         const sensorChartsWrapper = document.getElementById('sensorCharts');
         const resetZoomButton = document.getElementById('reset-zoom-button');
+        const colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'cyan', 'magenta', 'yellow', 'black'];
+        const pointStyles = ['circle', 'cross', 'crossRot', 'dash', 'line', 'rect', 'rectRounded', 'rectRot', 'star', 'triangle'];
         const allCharts = [];
             
         function makeChart(dataMappings, y_min, y_max, y_label) {
-            const colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'cyan', 'magenta', 'yellow', 'black'];
             const chartCanvas = document.createElement('canvas');
             const datasets = []
             let k = 0;
-            sensorIds.forEach(function(sensorId, i) {
-                dataMappings.forEach(function(mapping, j) {
+            let i = 0;
+            sensorIds.forEach(function(sensorId) {
+                dataMappings.forEach(function(mapping) {
                     datasets.push({ 
                         label: sensorId + '-' + mapping.label, 
                         data: [], 
-                        borderColor: colors[k%colors.length], 
+                        borderColor: mapping.color ? mapping.color: colors[k%colors.length], 
                         fill: false,
-                        dataMapping: mapping});
+                        borderDash: mapping.dash ? [5, 1]: [0, 0],
+                        pointStyle: pointStyles[i % pointStyles.length], // Assign point style
+                        dataMapping: mapping,
+                        sensorId: sensorId});
                     k += 1;
-                });  
+                });
+                i += 1;
             });
 
             const chart = new Chart(chartCanvas.getContext('2d'), {
@@ -86,6 +92,11 @@
                         duration: 0
                     },
                     plugins: {
+                        legend: {
+                            labels: {
+                                usePointStyle: true,
+                            },
+                        },
                         zoom: {
                             pan: {
                                 enabled: true,
@@ -162,20 +173,35 @@
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                updateChartsFromData(data);
+                updateChartsFromSensorData(sensorId, data);
                 
             } catch (error) {
                 console.error("Error fetching sensor data:", error);
             }
         }
 
-        function updateChartsFromData(data) {
+        function getValueFromPath(obj, path) {
+            const keys = path.split('.');
+            let value = obj;
+            for (const key of keys) {
+                value = value[key];
+                if (value === undefined) {
+                    return undefined;
+                }
+            }
+            return value;
+        }
+
+        function updateChartsFromSensorData(sensorId, data) {
             allCharts.forEach(function(chart) {
                 chart.data.datasets.forEach(function(dataset) {
+                    if (dataset.sensorId !== sensorId) {
+                        return;
+                    }
                     const dataMapping = dataset.dataMapping;
                     try {
                         const dataPreparedForUpdate = data.map(function(item) {
-                            return { x: new Date(item.sensor_timestamp), y: item.data[dataMapping.dataPath] };
+                            return { x: new Date(item.sensor_timestamp), y: getValueFromPath(item.data, dataMapping.dataPath) };
                         });
                         updateChartDataset(chart, dataset.label, dataPreparedForUpdate);
                     } catch (error) {
@@ -203,21 +229,21 @@
         ], 40, 90, 'dB'); // Leq
         
         makeChart([
-            {label: 'Pleasantness', dataPath: 'pleasantness_intg'},
-            {label: 'Pleasantness inst', dataPath: 'pleasantness_inst'},
-            {label: 'Eventfulness', dataPath: 'eventfulness_intg'},
-            {label: 'Eventfulness inst', dataPath: 'eventfulness_inst'}
+            {label: 'Pleasantness', dataPath: 'pleasantness_intg', color: 'blue'},
+            {label: 'Pleasantness inst', dataPath: 'pleasantness_inst', color: 'darkBlue', dash: true},
+            {label: 'Eventfulness', dataPath: 'eventfulness_intg', color: 'green'},
+            {label: 'Eventfulness inst', dataPath: 'eventfulness_inst', color: 'darkGlue', dash: true}
         ], -0.5, 0.5, ''); // Perceptual attributes
 
         makeChart([
-            {label: 'Birds', dataPath: 'sources.birds'},
-            {label: 'Construction', dataPath: 'soruces.construction'},
-            {label: 'Dogs', dataPath: 'sources.dogs'},
-            {label: 'Human', dataPath: 'sources.human'},
-            {label: 'Music', dataPath: 'sources.music'},
-            {label: 'Nature', dataPath: 'sources.nature'},
-            {label: 'Siren', dataPath: 'sources.siren'},
-            {label: 'Vehicles', dataPath: 'sources.vehicles'},
+            {label: 'Birds', dataPath: 'sources.birds', color: 'red'},
+            {label: 'Construction', dataPath: 'soruces.construction', color: 'orange'},
+            {label: 'Dogs', dataPath: 'sources.dogs', color: 'purple'},
+            {label: 'Human', dataPath: 'sources.human', color: 'brown'},
+            {label: 'Music', dataPath: 'sources.music', color: 'pink'},
+            {label: 'Nature', dataPath: 'sources.nature', color: 'gray'},
+            {label: 'Siren', dataPath: 'sources.siren', color: 'black'},
+            {label: 'Vehicles', dataPath: 'sources.vehicles', color: 'cyan'},
         ], 0.0, 1.0, ''); // Sources
 
         // When page loads, fetch sensor data
