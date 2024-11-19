@@ -106,7 +106,8 @@
                                 // Stop real-time updates
                                 isoChart.isZommed = true;
                                 resetZoomButton.disabled = false;
-                            }
+                            },
+                            onZoomStart: e => e.point.x > e.chart.chartArea.left && e.point.x < e.chart.chartArea.right && e.point.y > e.chart.chartArea.top && e.point.y < e.chart.chartArea.bottom
                         }
                     }
                 }
@@ -172,7 +173,8 @@
                                 // Stop real-time updates
                                 sourcesChart.isZommed = true;
                                 resetZoomButton.disabled = false;
-                            }
+                            },
+                            onZoomStart: e => e.point.x > e.chart.chartArea.left && e.point.x < e.chart.chartArea.right && e.point.y > e.chart.chartArea.top && e.point.y < e.chart.chartArea.bottom
                         }
                     }
                 }
@@ -230,7 +232,8 @@
                                 // Stop real-time updates
                                 leqChart.isZommed = true;
                                 resetZoomButton.disabled = false;
-                            }
+                            },
+                            onZoomStart: e => e.point.x > e.chart.chartArea.left && e.point.x < e.chart.chartArea.right && e.point.y > e.chart.chartArea.top && e.point.y < e.chart.chartArea.bottom
                         }
                     }
                 }
