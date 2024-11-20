@@ -8,6 +8,7 @@ from django.shortcuts import render
 from .models import SensorData
 from .serializers import SensorDataSerializer
 from django.utils.dateparse import parse_datetime
+from django.utils import timezone
 from django.db.models import Q
 
 @api_view(['POST'])
@@ -139,7 +140,12 @@ def _process_sensor_data_form(request):
     elif start_time is None and end_time is None and time_range is not None:
         time_range = int(time_range)
     
-    available_sensor_ids = sorted(list(set(SensorData.objects.filter(sensor_timestamp__range=(start_time, end_time)).values_list('sensor_id', flat=True))))
+
+    if start_time is not None and end_time is not None:
+        range_filter = (start_time, end_time)
+    else:
+        range_filter = (timezone.now() - datetime.timedelta(minutes=time_range), timezone.now())
+    available_sensor_ids = sorted(list(set(SensorData.objects.filter(sensor_timestamp__range=range_filter).values_list('sensor_id', flat=True))))
     sensor_ids = request.GET.getlist('sensors', [])
     if sensor_ids == []:
         sensor_ids = available_sensor_ids
