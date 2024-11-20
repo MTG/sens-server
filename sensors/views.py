@@ -220,7 +220,7 @@ def multiple_sensor_data_view(request):
         {
             'title': 'SPL - Leq',
             'data': [
-                {'label': 'Leq', 'data_path': 'leq', 'color': 'blue'}
+                {'label': 'Leq', 'data_path': 'leq'}
             ],
             'y_min': 40,
             'y_max': 90,
@@ -229,27 +229,43 @@ def multiple_sensor_data_view(request):
         {
             'title': 'SPL - LAeq',
             'data': [
-                {'label': 'LAeq', 'data_path': 'LAeq', 'color': 'red'}
+                {'label': 'LAeq', 'data_path': 'LAeq'}
             ],
             'y_min': 40,
             'y_max': 90,
             'y_unit': 'dB'
         },
         {
-            'title': 'Perceptual Attributes - Pleasantness',
+            'title': 'Perceptual Attributes - Pleasantness integrated',
             'data': [
-                {'label': 'Pleasantness', 'data_path': 'pleasantness_intg', 'color': 'blue'},
-                {'label': 'Pleasantness inst', 'data_path': 'pleasantness_inst', 'color': 'darkBlue', 'dash': True},
+                {'label': 'Pleasantness', 'data_path': 'pleasantness_intg'},
             ],
             'y_min': -0.5,
             'y_max': 0.5,
             'y_unit': ''
         },
         {
-            'title': 'Perceptual Attributes - Eventfulness',
+            'title': 'Perceptual Attributes - Pleasantness instantaneous',
             'data': [
-                {'label': 'Eventfulness', 'data_path': 'eventfulness_intg', 'color': 'green'},
-                {'label': 'Eventfulness inst', 'data_path': 'eventfulness_inst', 'color': 'darkGreen', 'dash': True}
+                {'label': 'Pleasantness inst', 'data_path': 'pleasantness_inst'},
+            ],
+            'y_min': -0.5,
+            'y_max': 0.5,
+            'y_unit': ''
+        },
+        {
+            'title': 'Perceptual Attributes - Eventfulness integrated',
+            'data': [
+                {'label': 'Eventfulness', 'data_path': 'eventfulness_intg'},
+            ],
+            'y_min': -0.5,
+            'y_max': 0.5,
+            'y_unit': ''
+        },
+        {
+            'title': 'Perceptual Attributes - Eventfulness instantaneous',
+            'data': [
+                {'label': 'Eventfulness inst', 'data_path': 'eventfulness_inst'}
             ],
             'y_min': -0.5,
             'y_max': 0.5,
@@ -257,14 +273,14 @@ def multiple_sensor_data_view(request):
         }
     ]
     sources_data = [
-        {'label': 'Birds', 'data_path': 'sources.birds', 'color': 'red'},
-        {'label': 'Construction', 'data_path': 'sources.construction', 'color': 'orange'},
-        {'label': 'Dogs', 'data_path': 'sources.dogs', 'color': 'purple'},
-        {'label': 'Human', 'data_path': 'sources.human', 'color': 'brown'},
-        {'label': 'Music', 'data_path': 'sources.music', 'color': 'pink'},
-        {'label': 'Nature', 'data_path': 'sources.nature', 'color': 'gray'},
-        {'label': 'Siren', 'data_path': 'sources.siren', 'color': 'black'},
-        {'label': 'Vehicles', 'data_path': 'sources.vehicles', 'color': 'cyan'},
+        {'label': 'Birds', 'data_path': 'sources.birds'},
+        {'label': 'Construction', 'data_path': 'sources.construction'},
+        {'label': 'Dogs', 'data_path': 'sources.dogs'},
+        {'label': 'Human', 'data_path': 'sources.human'},
+        {'label': 'Music', 'data_path': 'sources.music'},
+        {'label': 'Nature', 'data_path': 'sources.nature'},
+        {'label': 'Siren', 'data_path': 'sources.siren'},
+        {'label': 'Vehicles', 'data_path': 'sources.vehicles'},
     ]
     for source in sources_data:
         charts.append({

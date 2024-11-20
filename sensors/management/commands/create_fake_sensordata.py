@@ -21,12 +21,13 @@ class Command(BaseCommand):
     help = 'Create fake SensorData objects for the last 12 hours'
 
     def handle(self, *args, **kwargs):
+        sensor_id ="fake_sensor"
         now = make_aware(datetime.now())
         twelve_hours_ago = now - timedelta(hours=12)
         interval = timedelta(minutes=1) / 20  # 20 objects per minute
 
         # Check for the latest SensorData object
-        latest_data = SensorData.objects.filter(sensor_timestamp__gte=twelve_hours_ago).order_by('-sensor_timestamp').first()
+        latest_data = SensorData.objects.filter(sensor_id=sensor_id, sensor_timestamp__gte=twelve_hours_ago).order_by('-sensor_timestamp').first()
         start_time = max(latest_data.sensor_timestamp, twelve_hours_ago) if latest_data else twelve_hours_ago
 
         # Initial data
@@ -77,7 +78,7 @@ class Command(BaseCommand):
             # Create SensorData object
             SensorData.objects.create(
                 uuid=str(uuid.uuid4()),
-                sensor_id='fake_sensor',
+                sensor_id=sensor_id,
                 sensor_timestamp=start_time,
                 data=data
             )
